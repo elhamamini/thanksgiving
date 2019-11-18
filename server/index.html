@@ -1,0 +1,132 @@
+<html>
+  <head>
+    <script
+      src="https://unpkg.com/react@16/umd/react.development.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"
+      crossorigin
+    ></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.1/react-router-dom.js"></script>
+    <style>
+      body {
+        margin: 0;
+        font-family: verdana;
+      }
+      nav {
+        background-color: tomato;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-around;
+      }
+
+      nav a {
+        color: white;
+        border: solid 1px white;
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+      }
+
+      nav a.active {
+        color: tomato;
+        background-color: white;
+      }
+
+      .container {
+        margin: 1rem;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          font-size: 2rem;
+        }
+        nav {
+          flex-direction: column;
+        }
+        nav a {
+          margin-bottom: 1rem;
+        }
+      }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { HashRouter, Link, NavLink, Route, Switch } = ReactRouterDOM;
+
+      const People = ({ people }) => {
+        return (
+          <ul>
+            {people.map(person => (
+              <li key={person.id}>{person.name}</li>
+            ))}
+          </ul>
+        );
+      };
+      const Dish = ({ dishes }) => {
+        return (
+          <ul>
+            {dishes.map(dish => (
+              <li key={dish.id}>{dish.name}</li>
+            ))}
+          </ul>
+        );
+      };
+
+      const Nav = ({ people, dishes }) => {
+        const links = [
+          { text: "People", to: "/people", count: people.length },
+          { text: "Dishes", to: "/dishes", count: dishes.length }
+        ];
+        return (
+          <nav>
+            {links.map(link => (
+              <NavLink key={link.text} to={link.to}>
+                {link.text}
+              </NavLink>
+            ))}
+          </nav>
+        );
+      };
+
+      class App extends React.Component {
+        constructor() {
+          super();
+          this.state = {
+            people: [],
+            dishes: []
+          };
+        }
+        async componentDidMount() {
+          const urls = ["/api/people", "/api/dishes"];
+          const [people, places, things] = await Promise.all(
+            urls.map(url => axios.get(url).then(response => response.data))
+          );
+          this.setState({ people, dishes });
+        }
+        render() {
+          const { people } = this.state;
+          console.log(people);
+          return (
+            <HashRouter>
+              <Route render={() => <Nav {...this.state} />} />
+              <div className="container">
+                <Route
+                  path="/people"
+                  render={() => <People {...this.state} />}
+                />
+                <Route path="/dishes" render={() => <Dish {...this.state} />} />
+              </div>
+            </HashRouter>
+          );
+        }
+      }
+
+      ReactDOM.render(<App />, document.querySelector("#root"));
+    </script>
+  </body>
+</html>
